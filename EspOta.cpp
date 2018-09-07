@@ -54,6 +54,8 @@ void EspOta::begin() {
 
   currentEtag = "";
   sameETag = false;
+  contentLength = 0;
+  isValidContentType = false;
   validationAttemptIndex = 0;
 
   espOtaPreferences.begin(_pKey, false);
