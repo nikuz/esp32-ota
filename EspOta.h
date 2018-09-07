@@ -4,18 +4,13 @@
 #include "Arduino.h"
 
 class EspOta {
-  public:
-    EspOta(
-      const String host,
-      const int port,
-      const String bin,
-      const char *pKey
-    );
+   public:
+    EspOta(const String host, const int port, const String bin, const char *pKey);
     ~EspOta();
 
     void begin();
 
-  private:
+   private:
     void getCurrentETag();
     void validate();
     void update();
@@ -23,4 +18,3 @@ class EspOta {
 };
 
 #endif
-
