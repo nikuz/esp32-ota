@@ -17,6 +17,7 @@ const char *_pKey;
 String currentEtag;
 String newEtag = "";
 const char *etagId = "etag";
+const char *etagUpdateTime = "etag-update-time";
 
 // Validation variables
 const int maxValidationAttempts = 3;
@@ -36,7 +37,13 @@ EspOta::EspOta(const String host, const int port, const String bin, const char *
 }
 EspOta::~EspOta() {}
 
-void EspOta::begin() {
+void EspOta::updateEntries(const String host, const int port, const String bin) {
+    _host = host;
+    _port = port;
+    _bin = bin;
+}
+
+void EspOta::begin(unsigned long int timestamp) {
     Serial.println("");
     Serial.println("Begin OTA update");
 
@@ -63,7 +70,7 @@ void EspOta::begin() {
         return;
     }
 
-    this->update();
+    this->update(timestamp);
 }
 
 void EspOta::getCurrentETag() {
@@ -172,7 +179,7 @@ void EspOta::validate() {
     }
 }
 
-void EspOta::update() {
+void EspOta::update(unsigned long int timestamp) {
     // check contentLength and content type
     if (contentLength && isValidContentType) {
         // Check if there is enough to OTA Update
@@ -196,6 +203,7 @@ void EspOta::update() {
                 if (Update.isFinished()) {
                     Serial.println("Save new ETag: " + newEtag);
                     espOtaPreferences.putString(etagId, newEtag);
+                    espOtaPreferences.putULong(etagUpdateTime, timestamp);
                     Serial.println("Update successfully completed. Rebooting.");
                     ESP.restart();
                 } else {
@@ -223,4 +231,9 @@ void EspOta::end() {
     espOtaWiFiClient.stop();
     espOtaPreferences.end();
     Serial.println("Exiting OTA Update.");
+}
+
+unsigned long int EspOta::getUpdateTime() {
+    espOtaPreferences.begin(_pKey, true);
+    return espOtaPreferences.getULong(etagUpdateTime, -1);
 }
