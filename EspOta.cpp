@@ -11,13 +11,14 @@ Preferences espOtaPreferences;
 String _host;
 int _port;
 String _bin;
-const char *_pKey;
+const char* _pKey;
+String updateTime = "";
 
 // ETag variables
 String currentEtag;
 String newEtag = "";
-const char *etagId = "etag";
-const char *etagUpdateTime = "etag-update-time";
+const char* etagId = "etag";                 // Key name is limited to 15 chars.
+const char* etagUpdateTime = "etag_update";  // Key name is limited to 15 chars.
 
 // Validation variables
 const int maxValidationAttempts = 3;
@@ -29,7 +30,7 @@ bool sameETag = false;
 // Utility to extract header value from headers
 String getHeaderValue(String header, String headerName) { return header.substring(strlen(headerName.c_str())); }
 
-EspOta::EspOta(const String host, const int port, const String bin, const char *pKey) {
+EspOta::EspOta(const String host, const int port, const String bin, const char* pKey) {
     _host = host;
     _port = port;
     _bin = bin;
@@ -43,7 +44,7 @@ void EspOta::updateEntries(const String host, const int port, const String bin) 
     _bin = bin;
 }
 
-void EspOta::begin(unsigned long int timestamp) {
+void EspOta::begin(String timestamp) {
     Serial.println("");
     Serial.println("Begin OTA update");
 
@@ -179,7 +180,7 @@ void EspOta::validate() {
     }
 }
 
-void EspOta::update(unsigned long int timestamp) {
+void EspOta::update(String timestamp) {
     // check contentLength and content type
     if (contentLength && isValidContentType) {
         // Check if there is enough to OTA Update
@@ -201,9 +202,12 @@ void EspOta::update(unsigned long int timestamp) {
             if (Update.end()) {
                 Serial.println("OTA done!");
                 if (Update.isFinished()) {
+                    Serial.println("timestamp: " + timestamp);
+                    espOtaPreferences.putString(etagUpdateTime, timestamp);
+
                     Serial.println("Save new ETag: " + newEtag);
                     espOtaPreferences.putString(etagId, newEtag);
-                    espOtaPreferences.putULong(etagUpdateTime, timestamp);
+
                     Serial.println("Update successfully completed. Rebooting.");
                     ESP.restart();
                 } else {
@@ -233,7 +237,11 @@ void EspOta::end() {
     Serial.println("Exiting OTA Update.");
 }
 
-unsigned long int EspOta::getUpdateTime() {
-    espOtaPreferences.begin(_pKey, true);
-    return espOtaPreferences.getULong(etagUpdateTime, -1);
+String EspOta::getUpdateTime() {
+    if (updateTime == "") {
+        espOtaPreferences.begin(_pKey, true);
+        updateTime = espOtaPreferences.getString(etagUpdateTime, "-");
+        espOtaPreferences.end();
+    }
+    return updateTime;
 }

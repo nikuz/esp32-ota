@@ -13,13 +13,13 @@ class EspOta {
     String _bin;
 
     void updateEntries(const String host, const int port, const String bin);
-    unsigned long int getUpdateTime();
-    void begin(unsigned long int timestamp);
+    void begin(String timestamp);
+    String getUpdateTime();
 
    private:
     void getCurrentETag();
     void validate();
-    void update(unsigned long int timestamp);
+    void update(String timestamp);
     void end();
 };
 
