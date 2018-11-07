@@ -14,7 +14,7 @@ class EspOta {
 
     void updateEntries(const String host, const int port, const String bin);
     void begin(String timestamp);
-    String getUpdateTime();
+    static String getUpdateTime();
 
    private:
     void getCurrentETag();

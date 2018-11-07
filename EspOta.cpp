@@ -4,8 +4,8 @@
 #include "Update.h"
 #include "WiFi.h"
 
-WiFiClient espOtaWiFiClient;
-Preferences espOtaPreferences;
+static WiFiClient espOtaWiFiClient;
+static Preferences preferences;
 
 // Constructor variables
 String _host;
@@ -59,7 +59,7 @@ void EspOta::begin(String timestamp) {
     isValidContentType = false;
     validationAttemptIndex = 0;
 
-    espOtaPreferences.begin(_pKey, false);
+    preferences.begin(_pKey, false);
     this->getCurrentETag();
 
     while (!contentLength && !isValidContentType && !sameETag && validationAttemptIndex < maxValidationAttempts) {
@@ -75,7 +75,7 @@ void EspOta::begin(String timestamp) {
 }
 
 void EspOta::getCurrentETag() {
-    currentEtag = espOtaPreferences.getString(etagId, "");
+    currentEtag = preferences.getString(etagId, "");
     Serial.println("Current OTA ETag: " + currentEtag);
 }
 
@@ -96,9 +96,9 @@ void EspOta::validate() {
         while (espOtaWiFiClient.available() == 0) {
             if (millis() - timeout > 5000) {
                 Serial.println("Client Timeout!");
-                break;
                 espOtaWiFiClient.stop();
                 validationAttemptIndex += 1;
+                break;
             }
         }
 
@@ -203,10 +203,10 @@ void EspOta::update(String timestamp) {
                 Serial.println("OTA done!");
                 if (Update.isFinished()) {
                     Serial.println("timestamp: " + timestamp);
-                    espOtaPreferences.putString(etagUpdateTime, timestamp);
+                    preferences.putString(etagUpdateTime, timestamp);
 
                     Serial.println("Save new ETag: " + newEtag);
-                    espOtaPreferences.putString(etagId, newEtag);
+                    preferences.putString(etagId, newEtag);
 
                     Serial.println("Update successfully completed. Rebooting.");
                     ESP.restart();
@@ -233,15 +233,15 @@ void EspOta::update(String timestamp) {
 
 void EspOta::end() {
     espOtaWiFiClient.stop();
-    espOtaPreferences.end();
+    preferences.end();
     Serial.println("Exiting OTA Update.");
 }
 
 String EspOta::getUpdateTime() {
     if (updateTime == "") {
-        espOtaPreferences.begin(_pKey, true);
-        updateTime = espOtaPreferences.getString(etagUpdateTime, "-");
-        espOtaPreferences.end();
+        preferences.begin(_pKey, true);
+        updateTime = preferences.getString(etagUpdateTime, "-");
+        preferences.end();
     }
     return updateTime;
 }
