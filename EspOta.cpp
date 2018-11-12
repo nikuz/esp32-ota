@@ -169,6 +169,8 @@ void EspOta::validate() {
                 Serial.println("Got " + contentType + " payload.");
                 if (contentType == "application/octet-stream") {
                     isValidContentType = true;
+                } else {
+                    validationAttemptIndex += 1;
                 }
             }
         }
