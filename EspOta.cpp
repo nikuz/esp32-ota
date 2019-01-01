@@ -124,6 +124,7 @@ void EspOta::validate() {
             String line = espOtaWiFiClient.readStringUntil('\n');
             // remove space, to check if the line is end of headers
             line.trim();
+            line.toLowerCase();
 
             // if the the line is empty,
             // this is end of headers
@@ -137,7 +138,7 @@ void EspOta::validate() {
 
             // Check if the HTTP Response is 200
             // else break and Exit Update
-            if (line.startsWith("HTTP/1.1")) {
+            if (line.startsWith("http/1.1")) {
                 if (line.indexOf("200") < 0) {
                     Serial.println("Got a non 200 status code from server. Retry!");
                     espOtaWiFiClient.stop();
@@ -146,8 +147,8 @@ void EspOta::validate() {
             }
 
             // Check previous OTA update ETag
-            if (line.startsWith("ETag: ")) {
-                newEtag = getHeaderValue(line, "ETag: ");
+            if (line.startsWith("etag: ")) {
+                newEtag = getHeaderValue(line, "etag: ");
                 Serial.println("New ETag:" + newEtag);
                 if (currentEtag == newEtag) {
                     Serial.println("ETag the same.");
@@ -158,14 +159,14 @@ void EspOta::validate() {
 
             // extract headers here
             // Start with content length
-            if (line.startsWith("Content-Length: ")) {
-                contentLength = atoi((getHeaderValue(line, "Content-Length: ")).c_str());
+            if (line.startsWith("content-length: ")) {
+                contentLength = atoi((getHeaderValue(line, "content-length: ")).c_str());
                 Serial.println("Got " + String(contentLength) + " bytes from server");
             }
 
             // Next, the content type
-            if (line.startsWith("Content-Type: ")) {
-                String contentType = getHeaderValue(line, "Content-Type: ");
+            if (line.startsWith("content-type: ")) {
+                String contentType = getHeaderValue(line, "content-type: ");
                 Serial.println("Got " + contentType + " payload.");
                 if (contentType == "application/octet-stream") {
                     isValidContentType = true;
